@@ -10,17 +10,12 @@ export default Ember.Mixin.create({
   linkSelector: 'a.ember-view',
 
   initChildLinkViews: Ember.on('init', function(){
-    this.set('primaryLinkViews', Ember.A());
-    this.set('backupLinkViews', Ember.A());
+    this.set('childLinkViews', Ember.A());
   }),
 
   buildChildLinkViews: Ember.on('didRender', function(){
-    Ember.run.schedule('afterRender', this, function() {
-      this.set('primaryLinkViews', this._buildChildLinkViews());
-    });
-
     Ember.run.next(this, function() {
-      this.set('backupLinkViews', this._buildChildLinkViews());
+      this.set('childLinkViews', this._buildChildLinkViews());
     });
   }),
 
@@ -34,14 +29,6 @@ export default Ember.Mixin.create({
 
     return Ember.A(childLinkViews);
   },
-
-  childLinkViews: Ember.computed('primaryLinkViews', 'backupLinkViews', function(){
-    let childLinkViews = this.get('primaryLinkViews');
-    if (childLinkViews.length > 0) {
-      return childLinkViews;
-    }
-    return this.get('backupLinkViews');
-  }),
 
   _transitioningIn: Ember.computed('childLinkViews.@each.transitioningIn', function(){
     if (this.get('childLinkViews').isAny('transitioningIn')) {
