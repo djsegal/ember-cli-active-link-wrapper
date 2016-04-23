@@ -10,20 +10,37 @@ export default Ember.Mixin.create({
   linkSelector: 'a.ember-view',
 
   initChildLinkViews: Ember.on('init', function(){
-    this.set('childLinkViews', Ember.A());
+    this.set('primaryLinkViews', Ember.A());
+    this.set('backupLinkViews', Ember.A());
   }),
 
   buildChildLinkViews: Ember.on('didRender', function(){
-    Ember.run.schedule('afterRender', this, function(){
-      let childLinkSelector = this.get('linkSelector');
-      let childLinkElements = this.$(childLinkSelector);
-
-      let childLinkViews = childLinkElements.toArray().map(view =>
-        this._viewRegistry[view.id]
-      );
-
-      this.set('childLinkViews', Ember.A(childLinkViews));
+    Ember.run.schedule('afterRender', this, function() {
+      this.set('primaryLinkViews', this._buildChildLinkViews());
     });
+
+    Ember.run.next(this, function() {
+      this.set('backupLinkViews', this._buildChildLinkViews());
+    });
+  }),
+
+  _buildChildLinkViews: function() {
+    let childLinkSelector = this.get('linkSelector');
+    let childLinkElements = this.$(childLinkSelector);
+
+    let childLinkViews = childLinkElements.toArray().map(view =>
+      this._viewRegistry[view.id]
+    );
+
+    return Ember.A(childLinkViews);
+  },
+
+  childLinkViews: Ember.computed('primaryLinkViews', 'backupLinkViews', function(){
+    let childLinkViews = this.get('primaryLinkViews');
+    if (childLinkViews.length > 0) {
+      return childLinkViews;
+    }
+    return this.get('backupLinkViews');
   }),
 
   _transitioningIn: Ember.computed('childLinkViews.@each.transitioningIn', function(){
